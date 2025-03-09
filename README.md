@@ -135,5 +135,5 @@ If you have trouble running the program as described in the wiki, please check [
 * [Fallout wallpaper used as background](https://wallpapers.com/wallpapers/vault-boy-using-computer-fallout-4-4k-jgrppy4j9n4ivz65.html)
 * [Weather icons by Good Ware downloaded from flaticon.com](https://www.flaticon.com/packs/weather-78)
 * [Snowflake icon by kmg design downloaded from flaticon.com](https://www.flaticon.com/free-icon/snowflake_2529995)
-* [Moon icon by Tempo_doloe\ downloaded from flaticon.com](https://www.flaticon.com/free-icon/moon_4629127)
+* [Moon icon by Tempo\_doloe downloaded from flaticon.com](https://www.flaticon.com/free-icon/moon_4629127)
 * [Weather icon pack by Slidicon downloaded from flaticon.com](https://www.flaticon.com/packs/weather-392)
