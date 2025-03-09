@@ -10,10 +10,10 @@ This project is an open-source alternative software, NOT the original software p
 ---
 
 ![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black) ![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logoColor=white&logo=data:image/svg%2bxml;base64,PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+V2luZG93czwvdGl0bGU+PHBhdGggZmlsbCA9ICIjRkZGRkZGIiBkPSJNMCwwSDExLjM3N1YxMS4zNzJIMFpNMTIuNjIzLDBIMjRWMTEuMzcySDEyLjYyM1pNMCwxMi42MjNIMTEuMzc3VjI0SDBabTEyLjYyMywwSDI0VjI0SDEyLjYyMyIvPjwvc3ZnPg==) ![macOS](https://img.shields.io/badge/mac%20os-000000?style=for-the-badge&logo=apple&logoColor=white) ![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-A22846?style=for-the-badge&logo=Raspberry%20Pi&logoColor=white) ![Python](https://img.shields.io/badge/Python-3.9/3.13-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54) [![Licence](https://img.shields.io/github/license/mathoudebine/turing-smart-screen-python?style=for-the-badge)](./LICENSE)
-  
-A Python system monitor program and an abstraction library for **small IPS USB-C (UART) displays.**    
 
-Supported operating systems : macOS, Windows, Linux (incl. Raspberry Pi), basically all OS that support Python 3.9+  
+A Python system monitor program and an abstraction library for **small IPS USB-C (UART) displays.**
+
+Supported operating systems : macOS, Windows, Linux (incl. Raspberry Pi), basically all OS that support Python 3.9+
 
 ### ✅ Supported smart screens models:
 
@@ -53,9 +53,9 @@ Supported operating systems : macOS, Windows, Linux (incl. Raspberry Pi), basica
 
 </details>
 
-### [> What is my smart screen model?](https://github.com/mathoudebine/turing-smart-screen-python/wiki/Hardware-revisions)  
+### [> What is my smart screen model?](https://github.com/mathoudebine/turing-smart-screen-python/wiki/Hardware-revisions)
 
-**Please note all listed smart screens are different products** designed and produced by different companies, despite having a similar appearance. Their communication protocol is also different.  
+**Please note all listed smart screens are different products** designed and produced by different companies, despite having a similar appearance. Their communication protocol is also different.
 This project offers an abstraction layer to manage all of these products in a unified way, including some product-specific features like backplate RGB LEDs for available models!
 
 If you haven't received your screen yet but want to start developing your theme now, you can use the [**"simulated LCD" mode!**](https://github.com/mathoudebine/turing-smart-screen-python/wiki/Simulated-display)
@@ -71,10 +71,10 @@ There are 2 possible uses of this project Python code:
 
 ## System monitor
 
-This project is mainly a complete standalone program to use your screen as a system monitor, like the original vendor app.  
-Some themes are already included for a quick start!  
+This project is mainly a complete standalone program to use your screen as a system monitor, like the original vendor app.
+Some themes are already included for a quick start!
 ### [> Configure and start system monitor](https://github.com/mathoudebine/turing-smart-screen-python/wiki/System-monitor-:-how-to-start)
-<img src="res/docs/config_wizard.png"/>  
+<img src="res/docs/config_wizard.png"/>
 
 * Fully functional multi-OS code base (operates out of the box, tested on Windows, Linux & MacOS).
 * Display configuration using GUI configuration wizard or `config.yaml` file: no Python code to edit.
@@ -103,7 +103,7 @@ If you don't want to use your screen for system monitoring, you can just use thi
 - Turn the screen on/off
 - Display soft reset
 - Set brightness
-- Set backplate RGB LEDs color (on supported hardware rev.) 
+- Set backplate RGB LEDs color (on supported hardware rev.)
 
 This project will act as an abstraction library to handle specific protocols and capabilities of each supported smart screen models in a transparent way for the user.
 Check `simple-program.py` as an example.
@@ -115,7 +115,7 @@ If you have trouble running the program as described in the wiki, please check [
 
 ## They're talking about it!
 
-* [Hackaday - Cheap LCD Uses USB Serial](https://hackaday.com/2023/09/11/cheap-lcd-uses-usb-serial/)  
+* [Hackaday - Cheap LCD Uses USB Serial](https://hackaday.com/2023/09/11/cheap-lcd-uses-usb-serial/)
 
 
 * [CNX Software - Turing Smart Screen – A low-cost 3.5-inch USB Type-C information display](https://www.cnx-software.com/2022/04/29/turing-smart-screen-a-low-cost-3-5-inch-usb-type-c-information-display/)
@@ -127,3 +127,13 @@ If you have trouble running the program as described in the wiki, please check [
 
 [![Star History Chart](https://api.star-history.com/svg?repos=mathoudebine/turing-smart-screen-python&type=Date)](https://star-history.com/#mathoudebine/turing-smart-screen-python&Date)
 
+# ATTRIBUTIONS
+* [Cyborg icons created by Smashicons - Flaticon](https://www.flaticon.com/free-icons/cyborg)
+
+* [Weather part is based on this repo](https://github.com/PhazerTech/turing-smart-screen-python-weather-app.git)
+
+* [Fallout wallpaper used as background](https://wallpapers.com/wallpapers/vault-boy-using-computer-fallout-4-4k-jgrppy4j9n4ivz65.html)
+* [Weather icons by Good Ware downloaded from flaticon.com](https://www.flaticon.com/packs/weather-78)
+* [Snowflake icon by kmg design downloaded from flaticon.com](https://www.flaticon.com/free-icon/snowflake_2529995)
+* [Moon icon by Tempo_doloe\ downloaded from flaticon.com](https://www.flaticon.com/free-icon/moon_4629127)
+* [Weather icon pack by Slidicon downloaded from flaticon.com](https://www.flaticon.com/packs/weather-392)
