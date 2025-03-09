@@ -1,4 +1,5 @@
 from os.path import exists
+from os import environ
 import time
 import geocoder
 from datetime import datetime
@@ -10,8 +11,11 @@ import sched
 import queue
 from unidecode import unidecode
 from datetime import timedelta
+from dotenv import load_dotenv
 
-API_KEY = "787062c127484d7a53ebf55455d1a432"
+load_dotenv()
+
+API_KEY = environ.get("OPEN_WEATHER_API_KEY")
 HR24 = True
 DEGC = True
 FONT_COLOR = (31, 180, 31)
