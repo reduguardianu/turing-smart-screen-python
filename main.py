@@ -35,8 +35,10 @@ import subprocess
 import time
 from pathlib import Path
 from PIL import Image
-from sysmonitor import SysMonitor
-from weather import Weather
+from library import scheduler
+from library.inactivity_checker import InactivityChecker
+from sysmonitor.sysmonitor import SysMonitor
+from weather.weather import Weather
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 from threading import Thread
@@ -52,13 +54,17 @@ class TuringSmartScreenRunner:
         self.weather = Weather()
 
     def start(self):
-        Thread(target=self.sysMonitor.run, daemon=True).start()
-        Thread(target=self.weather.run, daemon=True).start()
+        self.sysmonitorThread = Thread(target=self.sysMonitor.run, daemon=True)
+        self.sysmonitorThread.start()
+        self.weatherThread = Thread(target=self.weather.run, daemon=True)
+        self.weatherThread.start()
 
-    def stop(self, qtApp):
+    def stop(self):
         self.sysMonitor.turn_off()
         self.weather.turn_off()
-        qtApp.quit()
+        time.sleep(10)
+
+
 
 if __name__ == "__main__":
 
@@ -69,20 +75,33 @@ if __name__ == "__main__":
 
     logger.debug("Using Python %s" % sys.version)
 
+    qtApp = QApplication([])
+    qtApp.setQuitOnLastWindowClosed(False)
 
     def on_signal_caught(signum, frame=None):
         logger.info("Caught signal %d, exiting" % signum)
         app.stop()
+        qtApp.quit()
 
 
     def on_exit_tray(tray_icon, item):
         logger.info("Exit from tray icon")
         app.stop()
+        qtApp.quit()
 
 
     def on_clean_exit(*args):
         logger.info("Program will now exit")
         app.stop()
+        qtApp.quit()
+
+    def restart_app(app, reason):
+        logger.info(f"Restarting application: {reason}" )
+        app.stop()
+        app = TuringSmartScreenRunner()
+        app.start()
+        scheduler.STOPPING = False
+
 
     # Set the different stopping event handlers, to send a complete frame to the LCD before exit
     signal.signal(signal.SIGINT, on_signal_caught)
@@ -90,18 +109,24 @@ if __name__ == "__main__":
     signal.signal(signal.SIGQUIT, on_signal_caught)
 
     app.start()
-    qtApp = QApplication([])
-    qtApp.setQuitOnLastWindowClosed(False)
+
     icon = QIcon("tray.png")
 
     tray = QSystemTrayIcon()
     tray.setIcon(icon)
     tray.setVisible(True)
 
+    inactivity_checker = InactivityChecker(inactivity_threshold=10, callback=lambda: restart_app(app, "Inactivity timeout reached"))
+
     menu = QMenu()
 
     quitOption = QAction("Quit")
-    quitOption.triggered.connect(lambda:app.stop(qtApp))
+    quitOption.triggered.connect(lambda: on_exit_tray(tray, quitOption))
+
+    restartOption = QAction("Restart")
+    restartOption.triggered.connect(lambda: restart_app(app, "User requested restart"))
+
+    menu.addAction(restartOption)
     menu.addAction(quitOption)
 
     tray.setContextMenu(menu)

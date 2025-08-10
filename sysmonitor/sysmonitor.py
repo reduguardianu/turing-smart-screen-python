@@ -1,10 +1,12 @@
+from datetime import timedelta
+import queue
 import time
-import library.display
-import library.scheduler as scheduler
 from library import config
 from library.lcd.lcd_comm import Orientation
 from library.display import Display
 from library.log import logger
+from sysmonitor import tasks_to_schedule
+from library.scheduler import async_job, schedule
 
 def _get_full_path(path, name):
     if name:
@@ -49,10 +51,12 @@ class SysMonitor(Display):
     def __init__(self):
         width, height = _get_theme_size()
         #com_port = config.CONFIG_DATA['config']['COM_PORT']
-        com_port = "/dev/ttyACM1"
+        com_port = "/dev/serial/by-id/usb-2017-2-25_UsbMonitor_USB35INCHIPSV2-if00"
         revision = config.CONFIG_DATA['display']['REVISION']
         brightness = config.CONFIG_DATA["display"]["BRIGHTNESS"]
         display_rgb_led = config.THEME_DATA['display'].get("DISPLAY_RGB_LED", (255, 255, 255))
+        self.update_queue = queue.Queue()
+
         super().__init__(
             com_port=com_port,
             revision=revision,
@@ -60,44 +64,42 @@ class SysMonitor(Display):
             height=height,
             brightness=brightness,
             display_rgb_led=display_rgb_led,
-            update_queue=config.update_queue)
+            update_queue=self.update_queue)
 
     def run(self):
+        self.stopping = False
         self.setup()
         # Turn on display, set brightness and LEDs for supported HW
         self.turn_on()
-
+        
         # Set orientation
         self.lcd.SetOrientation(_get_theme_orientation())
-        scheduler.QueueHandler()
+        self.QueueHandler()
         self.display_static_images()
         self.display_static_text()
         self.wait_for_empty_queue(10)
         logger.info("Starting system monitoring")
         import library.stats as stats
 
-        scheduler.CPUPercentage(self); time.sleep(0.25)
-        scheduler.CPUFrequency(self); time.sleep(0.25)
-        scheduler.CPULoad(self); time.sleep(0.25)
-        scheduler.CPUTemperature(self); time.sleep(0.25)
-        scheduler.CPUFanSpeed(self); time.sleep(0.25)
+        tasks_to_schedule.CPUPercentage(self); time.sleep(0.25)
+        tasks_to_schedule.CPUFrequency(self); time.sleep(0.25)
+        tasks_to_schedule.CPULoad(self); time.sleep(0.25)
+        tasks_to_schedule.CPUTemperature(self); time.sleep(0.25)
+        tasks_to_schedule.CPUFanSpeed(self); time.sleep(0.25)
         if stats.Gpu.is_available():
-            scheduler.GpuStats(self); time.sleep(0.25)
-        scheduler.MemoryStats(self); time.sleep(0.25)
-        scheduler.DiskStats(self); time.sleep(0.25)
-        scheduler.NetStats(self); time.sleep(0.25)
-        scheduler.DateStats(self); time.sleep(0.25)
-        scheduler.SystemUptimeStats(self); time.sleep(0.25)
-        scheduler.CustomStats(self); time.sleep(0.25)
-        scheduler.WeatherStats(self); time.sleep(0.25)
-        scheduler.PingStats(self); time.sleep(0.25)
-
-
-
+            tasks_to_schedule.GpuStats(self); time.sleep(0.25)
+        tasks_to_schedule.MemoryStats(self); time.sleep(0.25)
+        tasks_to_schedule.DiskStats(self); time.sleep(0.25)
+        tasks_to_schedule.NetStats(self); time.sleep(0.25)
+        tasks_to_schedule.DateStats(self); time.sleep(0.25)
+        tasks_to_schedule.SystemUptimeStats(self); time.sleep(0.25)
+        tasks_to_schedule.CustomStats(self); time.sleep(0.25)
+        tasks_to_schedule.WeatherStats(self); time.sleep(0.25)
+        tasks_to_schedule.PingStats(self); time.sleep(0.25)
 
     def turn_off(self):
         super().turn_off()
-        scheduler.STOPPING = True
+        self.stopping = True
         self.wait_for_empty_queue()
 
     def display_static_images(self):
@@ -139,8 +141,28 @@ class SysMonitor(Display):
         logger.info("Waiting for all pending request to be sent to display (%ds max)..." % timeout)
 
         wait_time = 0
-        while not scheduler.is_queue_empty() and wait_time < timeout:
+        while not self.is_queue_empty() and wait_time < timeout:
             time.sleep(0.1)
             wait_time = wait_time + 0.1
 
         logger.debug("(Waited %.1fs)" % wait_time)
+
+
+    @async_job("Queue_Handler_SysMonitor")
+    @schedule(timedelta(milliseconds=1).total_seconds())
+    def QueueHandler(self):
+        # Do next action waiting in the queue
+        if self.stopping:
+            # Empty the action queue to allow program to exit cleanly
+            while not self.update_queue.empty():
+                f, args = self.update_queue.get()
+                f(*args)
+        else:
+            # Execute first action in the queue
+            f, args = self.update_queue.get()
+            if f:
+                f(*args)
+
+
+    def is_queue_empty(self) -> bool:
+        return self.update_queue.empty()

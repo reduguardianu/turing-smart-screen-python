@@ -19,6 +19,7 @@
 # Configure logging format
 import locale
 import logging
+import sys
 from logging.handlers import RotatingFileHandler
 
 # use current locale for date/time formatting in logs
@@ -34,3 +35,5 @@ logging.basicConfig(  # format='%(asctime)s [%(levelname)s] %(message)s in %(pat
 
 logger = logging.getLogger('turing')
 logger.setLevel(logging.DEBUG)  # Lowest log level : print all messages
+
+sys.excepthook = lambda type, value, traceback: logger.error("Uncaught exception", exc_info=(type, value, traceback))

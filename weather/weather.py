@@ -7,7 +7,7 @@ from library.display import Display
 from library.lcd.lcd_comm import Orientation
 import requests
 from library.scheduler import async_job, schedule
-import sched
+from library.log import logger
 import queue
 from unidecode import unidecode
 from datetime import timedelta
@@ -26,7 +26,7 @@ DEGC=True
 class Weather(Display):
     def __init__(self):
         #com_port = config.CONFIG_DATA['config']['COM_PORT']
-        com_port = "/dev/ttyACM0"
+        com_port = "/dev/serial/by-id/usb-Turing_UsbMonitor_USB35INCHIPSV2-if00"
         revision = "A"
         brightness = 20
         display_rgb_led = (255, 255, 255)
@@ -41,6 +41,7 @@ class Weather(Display):
             brightness=brightness,
             display_rgb_led=display_rgb_led,
             update_queue=self.update_queue)
+
 
     def run(self):
         self.setup()
@@ -77,7 +78,7 @@ class Weather(Display):
             y = x["main"]
             z = x["weather"]
             self.description = z[0]["description"]
-            # convert temperature to C or F
+            # convert temperature to C or Fg
             if DEGC:
                 self.current_temp = str(round(y["temp"]-273.15,1))+"°C"
                 self.feels_like = str(round(y["feels_like"]-273.15,1))+"°C"
@@ -180,7 +181,7 @@ class Weather(Display):
         )
 
 
-    @async_job("Queue_Handler")
+    @async_job("Queue_Handler_Weather")
     @schedule(timedelta(milliseconds=1).total_seconds())
     def QueueHandler(self):
         # Do next action waiting in the queue
@@ -201,8 +202,6 @@ class Weather(Display):
         # Waiting for all pending request to be sent to display
 
         wait_time = 0
-        while not scheduler.is_queue_empty() and wait_time < timeout:
+        while not self.is_queue_empty() and wait_time < timeout:
             time.sleep(0.1)
             wait_time = wait_time + 0.1
-
-        logger.debug("(Waited %.1fs)" % wait_time)
