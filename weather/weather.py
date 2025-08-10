@@ -24,9 +24,8 @@ FONT="res/fonts/generale-mono/GeneraleMonoA.ttf"
 DEGC=True
 
 class Weather(Display):
-    def __init__(self):
-        #com_port = config.CONFIG_DATA['config']['COM_PORT']
-        com_port = "/dev/serial/by-id/usb-Turing_UsbMonitor_USB35INCHIPSV2-if00"
+    def __init__(self, device):
+        com_port = device
         revision = "A"
         brightness = 20
         display_rgb_led = (255, 255, 255)

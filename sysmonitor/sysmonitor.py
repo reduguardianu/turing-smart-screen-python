@@ -48,10 +48,10 @@ def _get_theme_size() -> tuple[int, int]:
 
 
 class SysMonitor(Display):
-    def __init__(self):
+    def __init__(self, device):
         width, height = _get_theme_size()
         #com_port = config.CONFIG_DATA['config']['COM_PORT']
-        com_port = "/dev/serial/by-id/usb-2017-2-25_UsbMonitor_USB35INCHIPSV2-if00"
+        com_port = device
         revision = config.CONFIG_DATA['display']['REVISION']
         brightness = config.CONFIG_DATA["display"]["BRIGHTNESS"]
         display_rgb_led = config.THEME_DATA['display'].get("DISPLAY_RGB_LED", (255, 255, 255))

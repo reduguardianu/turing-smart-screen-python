@@ -23,19 +23,16 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # This file is the system monitor main program to display HW sensors on your screen using themes (see README)
-import glob
-import os
 import sys
 
-import atexit
+
 import locale
-import platform
+
 import signal
-import subprocess
+
 import time
 from pathlib import Path
-from PIL import Image
-from library import scheduler
+
 from library.inactivity_checker import InactivityChecker
 from sysmonitor.sysmonitor import SysMonitor
 from weather.weather import Weather
@@ -44,31 +41,47 @@ from PyQt6.QtWidgets import *
 from threading import Thread
 
 from library.log import logger
-
+from configparser import ConfigParser
 
 MAIN_DIRECTORY = str(Path(__file__).parent.resolve()) + "/"
 
 class TuringSmartScreenRunner:
-    def __init__(self):
-        self.sysMonitor = SysMonitor()
-        self.weather = Weather()
+    def __init__(self, config):
+        if config.has_section("sysmonitor"):
+            self.sysMonitor = SysMonitor(config.get("sysmonitor", "device"))
+        else:
+            self.sysMonitor = None
+        if config.has_section("weather"):
+            self.weather = Weather(config.get("weather", "device"))
+        else:
+            self.weather = None
+        
+        if self.sysMonitor is None and self.weather is None:
+            logger.error("No sysmonitor or weather device configured, exiting")
+            sys.exit(1)
 
     def start(self):
-        self.sysmonitorThread = Thread(target=self.sysMonitor.run, daemon=True)
-        self.sysmonitorThread.start()
-        self.weatherThread = Thread(target=self.weather.run, daemon=True)
-        self.weatherThread.start()
+        if self.sysMonitor is not None:
+            self.sysmonitorThread = Thread(target=self.sysMonitor.run, daemon=True)
+            self.sysmonitorThread.start()
+        if self.weather is not None:
+            self.weatherThread = Thread(target=self.weather.run, daemon=True)
+            self.weatherThread.start()
 
     def stop(self):
-        self.sysMonitor.turn_off()
-        self.weather.turn_off()
-        time.sleep(10)
+        if self.sysMonitor is not None:
+            self.sysMonitor.turn_off()
+        if self.weather is not None:
+            self.weather.turn_off()
 
 
 
 if __name__ == "__main__":
 
-    app = TuringSmartScreenRunner()
+    config = ConfigParser()
+    config.read("config.ini")
+
+    app = TuringSmartScreenRunner(config)
 
     # Apply system locale to this program
     locale.setlocale(locale.LC_ALL, '')
@@ -98,9 +111,9 @@ if __name__ == "__main__":
     def restart_app(app, reason):
         logger.info(f"Restarting application: {reason}" )
         app.stop()
+        time.sleep(10)
         app = TuringSmartScreenRunner()
         app.start()
-        scheduler.STOPPING = False
 
 
     # Set the different stopping event handlers, to send a complete frame to the LCD before exit
