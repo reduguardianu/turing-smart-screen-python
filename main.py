@@ -23,6 +23,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # This file is the system monitor main program to display HW sensors on your screen using themes (see README)
+import os
 import sys
 
 
@@ -48,10 +49,18 @@ MAIN_DIRECTORY = str(Path(__file__).parent.resolve()) + "/"
 class TuringSmartScreenRunner:
     def __init__(self, config):
         if config.has_section("sysmonitor"):
-            self.sysMonitor = SysMonitor(config.get("sysmonitor", "device"))
+            logger.info("SysMonitor device found in config, initializing SysMonitor")
+            sysMonitorScreenPath = config.get("sysmonitor", "device")
+            self.checkDevicePresence(sysMonitorScreenPath, "SysMonitor")
+            self.sysMonitor = SysMonitor(sysMonitorScreenPath)
         else:
             self.sysMonitor = None
+
+
         if config.has_section("weather"):
+            logger.info("Weather device found in config, initializing Weather")
+            weatherScreenPath = config.get("weather", "device")
+            self.checkDevicePresence(weatherScreenPath, "Weather")
             self.weather = Weather(config.get("weather", "device"))
         else:
             self.weather = None
@@ -59,6 +68,18 @@ class TuringSmartScreenRunner:
         if self.sysMonitor is None and self.weather is None:
             logger.error("No sysmonitor or weather device configured, exiting")
             sys.exit(1)
+
+    def checkDevicePresence(self, screenPath, monitorName):
+        devicePresent = os.path.exists(screenPath)
+        safetyCounter = 10
+        while not devicePresent:
+            logger.warning(f"{monitorName} device {screenPath} not found, waiting for it to be connected")
+            time.sleep(5)
+            devicePresent = os.path.exists(screenPath)
+            safetyCounter -= 1
+            if safetyCounter <= 0:
+                logger.error(f"{monitorName} device {screenPath} not found, exiting")
+                sys.exit(1)
 
     def start(self):
         if self.sysMonitor is not None:
@@ -108,12 +129,12 @@ if __name__ == "__main__":
         app.stop()
         qtApp.quit()
 
-    def restart_app(app, reason):
-        logger.info(f"Restarting application: {reason}" )
-        app.stop()
-        time.sleep(10)
-        app = TuringSmartScreenRunner()
-        app.start()
+    def restart_app(current_app, reason):
+        logger.info(f"Restarting application: {reason}")
+        current_app.stop()
+        time.sleep(3)
+        logger.info("Restarting process...")
+        os.execv(sys.executable, [sys.executable] + sys.argv)
 
 
     # Set the different stopping event handlers, to send a complete frame to the LCD before exit
@@ -130,14 +151,16 @@ if __name__ == "__main__":
     tray.setVisible(True)
 
     inactivity_checker = InactivityChecker(inactivity_threshold=10, callback=lambda: restart_app(app, "Inactivity timeout reached"))
-
+    Thread(target=inactivity_checker.check_inactivity, daemon=True).start()
     menu = QMenu()
 
     quitOption = QAction("Quit")
     quitOption.triggered.connect(lambda: on_exit_tray(tray, quitOption))
 
     restartOption = QAction("Restart")
-    restartOption.triggered.connect(lambda: restart_app(app, "User requested restart"))
+    restartOption.triggered.connect(
+        lambda: Thread(target=lambda: restart_app(app, "User requested restart"), daemon=True).start()
+    )
 
     menu.addAction(restartOption)
     menu.addAction(quitOption)

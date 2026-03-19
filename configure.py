@@ -31,7 +31,7 @@ if sys.version_info < MIN_PYTHON:
     print("[ERROR] Python %s.%s or later is required." % MIN_PYTHON)
     try:
         sys.exit(0)
-    except:
+    except Exception:
         os._exit(0)
 
 try:
@@ -52,7 +52,7 @@ Or the troubleshooting page: https://github.com/mathoudebine/turing-smart-screen
         e))
     try:
         sys.exit(0)
-    except:
+    except Exception:
         os._exit(0)
 
 from library.sensors.sensors_python import sensors_fans, is_cpu_fan
@@ -308,7 +308,7 @@ class TuringConfigWindow:
             if theme_data['display'].get("DISPLAY_SIZE", '3.5"') == '2.1"':
                 # This is a circular screen: apply a circle mask over the preview
                 theme_preview.paste(circular_mask, mask=circular_mask)
-        except:
+        except Exception:
             theme_preview = Image.open(MAIN_DIRECTORY + "res/docs/no-preview.png")
         finally:
             theme_preview.thumbnail((320, 480), Image.Resampling.LANCZOS)
@@ -337,14 +337,14 @@ class TuringConfigWindow:
 
         try:
             self.theme_cb.set(self.config['config']['THEME'])
-        except:
+        except (KeyError, TypeError):
             self.theme_cb.set("")
 
         self.load_theme_preview()
 
         try:
             self.hwlib_cb.set(hw_lib_map[self.config['config']['HW_SENSORS']])
-        except:
+        except (KeyError, TypeError):
             self.hwlib_cb.current(0)
 
         try:
@@ -352,7 +352,7 @@ class TuringConfigWindow:
                 self.eth_cb.current(0)
             else:
                 self.eth_cb.set(self.config['config']['ETH'])
-        except:
+        except (KeyError, TypeError):
             self.eth_cb.current(0)
 
         try:
@@ -360,7 +360,7 @@ class TuringConfigWindow:
                 self.wl_cb.current(0)
             else:
                 self.wl_cb.set(self.config['config']['WLO'])
-        except:
+        except (KeyError, TypeError):
             self.wl_cb.current(0)
 
         try:
@@ -368,31 +368,31 @@ class TuringConfigWindow:
                 self.com_cb.current(0)
             else:
                 self.com_cb.set(self.config['config']['COM_PORT'])
-        except:
+        except (KeyError, TypeError):
             self.com_cb.current(0)
 
         # Guess display size from theme in the configuration
         size = get_theme_size(self.config['config']['THEME'])
         try:
             self.size_cb.set(size)
-        except:
+        except (KeyError, TypeError):
             self.size_cb.current(0)
 
         # Guess model from revision and size
         revision = self.config['display']['REVISION']
         try:
             self.model_cb.set(revision_and_size_to_model_map[(revision, size)])
-        except:
+        except (KeyError, TypeError):
             self.model_cb.current(0)
 
         try:
             self.orient_cb.set(reverse_map[self.config['display']['DISPLAY_REVERSE']])
-        except:
+        except (KeyError, TypeError):
             self.orient_cb.current(0)
 
         try:
             self.brightness_slider.set(int(self.config['display']['BRIGHTNESS']))
-        except:
+        except (KeyError, TypeError, ValueError):
             self.brightness_slider.set(50)
 
         try:
@@ -400,7 +400,7 @@ class TuringConfigWindow:
                 self.cpu_fan_cb.current(0)
             else:
                 self.cpu_fan_cb.set(self.config['config']['CPU_FAN'])
-        except:
+        except (KeyError, TypeError):
             self.cpu_fan_cb.current(0)
 
         # Reload content on screen
@@ -457,7 +457,7 @@ class TuringConfigWindow:
         self.more_config_window.show()
 
     def on_open_theme_folder_click(self):
-        path = f'"{MAIN_DIRECTORY}res/themes"'
+        path = MAIN_DIRECTORY + "res/themes"
         if platform.system() == "Windows":
             os.startfile(path)
         elif platform.system() == "Darwin":
@@ -466,16 +466,16 @@ class TuringConfigWindow:
             subprocess.Popen(["xdg-open", path])
 
     def on_theme_editor_click(self):
-        subprocess.Popen(
-            f'"{MAIN_DIRECTORY}{glob.glob("theme-editor.*", root_dir=MAIN_DIRECTORY)[0]}" "{self.theme_cb.get()}"',
-            shell=True)
+        executable = MAIN_DIRECTORY + glob.glob("theme-editor.*", root_dir=MAIN_DIRECTORY)[0]
+        subprocess.Popen([executable, self.theme_cb.get()])
 
     def on_save_click(self):
         self.save_config_values()
 
     def on_saverun_click(self):
         self.save_config_values()
-        subprocess.Popen(f'"{MAIN_DIRECTORY}{glob.glob("main.*", root_dir=MAIN_DIRECTORY)[0]}"', shell=True)
+        executable = MAIN_DIRECTORY + glob.glob("main.*", root_dir=MAIN_DIRECTORY)[0]
+        subprocess.Popen([executable])
         self.window.destroy()
 
     def on_brightness_change(self, e=None):
@@ -624,7 +624,7 @@ class MoreConfigWindow:
             return True
         try:
             float(coord)
-        except:
+        except ValueError:
             return False
         return True
 
@@ -639,32 +639,32 @@ class MoreConfigWindow:
 
         try:
             self.ping_entry.insert(0, self.config['config']['PING'])
-        except:
+        except (KeyError, TypeError):
             self.ping_entry.insert(0, "8.8.8.8")
 
         try:
             self.api_entry.insert(0, self.config['config']['WEATHER_API_KEY'])
-        except:
+        except (KeyError, TypeError):
             pass
 
         try:
             self.lat_entry.insert(0, self.config['config']['WEATHER_LATITUDE'])
-        except:
+        except (KeyError, TypeError):
             self.lat_entry.insert(0, "45.75")
 
         try:
             self.long_entry.insert(0, self.config['config']['WEATHER_LONGITUDE'])
-        except:
+        except (KeyError, TypeError):
             self.long_entry.insert(0, "45.75")
 
         try:
             self.unit_cb.set(weather_unit_map[self.config['config']['WEATHER_UNITS']])
-        except:
+        except (KeyError, TypeError):
             self.unit_cb.set(0)
 
         try:
             self.lang_cb.set(weather_lang_map[self.config['config']['WEATHER_LANGUAGE']])
-        except:
+        except (KeyError, TypeError):
             self.lang_cb.set(weather_lang_map["en"])
 
     def on_save_click(self):

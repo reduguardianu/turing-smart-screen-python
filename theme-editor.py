@@ -33,18 +33,18 @@ if sys.version_info < MIN_PYTHON:
     print("[ERROR] Python %s.%s or later is required." % MIN_PYTHON)
     try:
         sys.exit(0)
-    except:
+    except Exception:
         os._exit(0)
 
 try:
     import tkinter
     from PIL import ImageTk, Image
-except:
+except ImportError as e:
     print(
         "[ERROR] Tkinter dependency not installed. Please follow troubleshooting page: https://github.com/mathoudebine/turing-smart-screen-python/wiki/Troubleshooting#all-os-tkinter-dependency-not-installed")
     try:
         sys.exit(0)
-    except:
+    except Exception:
         os._exit(0)
 
 if len(sys.argv) != 2:
@@ -56,7 +56,7 @@ if len(sys.argv) != 2:
     print("        theme-editor.py Cyberpunk")
     try:
         sys.exit(0)
-    except:
+    except Exception:
         os._exit(0)
 
 import library.log
@@ -137,7 +137,7 @@ if __name__ == "__main__":
         logger.debug("Exit Theme Editor...")
         try:
             sys.exit(0)
-        except:
+        except Exception:
             os._exit(0)
 
 

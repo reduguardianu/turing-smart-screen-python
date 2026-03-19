@@ -49,7 +49,7 @@ class Display:
             case "SIMU":
                 self.lcd = LcdSimulated(display_width=width, display_height=height)
             case _:
-                logger.error("Unknown display revision '", revision, "'")
+                logger.error(f"Unknown display revision '{revision}'")
 
 
     def setup(self):

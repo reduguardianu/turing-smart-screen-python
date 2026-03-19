@@ -27,8 +27,7 @@ def _get_theme_orientation() -> Orientation:
         else:
             return Orientation.LANDSCAPE
     else:
-        logger.warning("Orientation '", config.THEME_DATA["display"]["DISPLAY_ORIENTATION"],
-                       "' unknown, using portrait")
+        logger.warning(f"Orientation '{config.THEME_DATA['display']['DISPLAY_ORIENTATION']}' unknown, using portrait")
         return Orientation.PORTRAIT
 
 
@@ -71,7 +70,7 @@ class SysMonitor(Display):
         self.setup()
         # Turn on display, set brightness and LEDs for supported HW
         self.turn_on()
-        
+
         # Set orientation
         self.lcd.SetOrientation(_get_theme_orientation())
         self.QueueHandler()
@@ -155,13 +154,19 @@ class SysMonitor(Display):
         if self.stopping:
             # Empty the action queue to allow program to exit cleanly
             while not self.update_queue.empty():
-                f, args = self.update_queue.get()
-                f(*args)
+                try:
+                    f, args = self.update_queue.get(timeout=0.1)
+                    f(*args)
+                except queue.Empty:
+                    break
         else:
             # Execute first action in the queue
-            f, args = self.update_queue.get()
-            if f:
-                f(*args)
+            try:
+                f, args = self.update_queue.get(timeout=0.1)
+                if f:
+                    f(*args)
+            except queue.Empty:
+                pass
 
 
     def is_queue_empty(self) -> bool:

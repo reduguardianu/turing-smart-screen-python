@@ -1,5 +1,6 @@
 from os.path import exists
 from os import environ
+from pathlib import Path
 import time
 import geocoder
 from datetime import datetime
@@ -12,16 +13,19 @@ import queue
 from unidecode import unidecode
 from datetime import timedelta
 from dotenv import load_dotenv
+from PIL import Image, ImageDraw, ImageFont
+
 
 load_dotenv()
+
+_PROJECT_ROOT = Path(__file__).parent.parent
 
 API_KEY = environ.get("OPEN_WEATHER_API_KEY")
 HR24 = True
 DEGC = True
 FONT_COLOR = (31, 180, 31)
 FONT_COLOR_DARKER = (15, 90, 15)
-FONT="res/fonts/generale-mono/GeneraleMonoA.ttf"
-DEGC=True
+FONT = str(_PROJECT_ROOT / "res/fonts/generale-mono/GeneraleMonoA.ttf")
 
 class Weather(Display):
     def __init__(self, device):
@@ -32,6 +36,16 @@ class Weather(Display):
         self.update_queue = queue.Queue()
         self.oldicon = None
         self.stopping = False
+        self.location = ""
+        self.complete_url = ""
+        self.description = ""
+        self.current_temp = "N/A"
+        self.feels_like = "N/A"
+        self.newicon = None
+        self.background = str(_PROJECT_ROOT / "res/backgrounds/nightElse.png")
+        self.font = ImageFont.truetype(FONT, 25)
+        dummy_img = Image.new("RGB", (1, 1))
+        self.draw = ImageDraw.Draw(dummy_img)
         super().__init__(
             com_port=com_port,
             width = 0,
@@ -96,16 +110,16 @@ class Weather(Display):
             if  self.newicon !=  self.oldicon:
                 self.oldicon =  self.newicon
                 # check if background exists, else use default outlier background ie. haze, fog, mist
-                self.background = "res/backgrounds/"+ self.newicon+".png"
+                self.background = str(_PROJECT_ROOT / "res/backgrounds" / (self.newicon + ".png"))
                 if not exists(self.background):
-                    if "day" in self.newicon: self.background = "res/backgrounds/dayElse.png"
-                    else: self.background = "res/backgrounds/nightElse.png"
+                    if "day" in self.newicon: self.background = str(_PROJECT_ROOT / "res/backgrounds/dayElse.png")
+                    else: self.background = str(_PROJECT_ROOT / "res/backgrounds/nightElse.png")
                 # display background
                 self.lcd.DisplayBitmap(self.background)
         else:
              self.location = "City Not Found"
         # Display location
-        self.lcd.DisplayText(unidecode(self.location), 35, 270,
+        self.lcd.DisplayText(unidecode(self.location), 35, 240,
                             font=FONT,
                             font_size=20,
                             font_color=FONT_COLOR_DARKER,
@@ -123,16 +137,28 @@ class Weather(Display):
                             font_color=FONT_COLOR_DARKER,
                             background_image=self.background)
 
-        # Display custom text with solid background
-        self.lcd.DisplayText(f"{self.description:<30}", 35, 240,
+        # Display custom text with solid
+        width = self.draw.textlength(self.description, font=self.font)
+        multiline = width > 350
+        fontsize = 25
+        if multiline:
+            breaking_point = self.description[15:].rfind(" ")
+            if breaking_point != -1:
+                breaking_point += 15  # Adjust to index in the full string
+                description = self.description[:breaking_point] + "\n" + self.description[breaking_point + 1:]
+                self.description = description
+            fontsize = 23
+
+        self.lcd.DisplayText(f"{self.description:<30}", 35, 270,
                             font=FONT,
-                            font_size=25,
+                            font_size=fontsize,
                             font_color=FONT_COLOR,
                             background_image=self.background)
 
     @async_job("Time updater")
     @schedule(1)
     def set_time(self):
+        logger.info("Setting time...")
         # get current time
         now = datetime.now()
         day_str = now.strftime('%A')
@@ -185,15 +211,21 @@ class Weather(Display):
     def QueueHandler(self):
         # Do next action waiting in the queue
         if self.stopping:
-        # Empty the action queue to allow program to exit cleanly
+            # Empty the action queue to allow program to exit cleanly
             while not self.update_queue.empty():
-                f, args = self.update_queue.get()
-                f(*args)
+                try:
+                    f, args = self.update_queue.get(timeout=0.1)
+                    f(*args)
+                except queue.Empty:
+                    break
         else:
-        # Execute first action in the queue
-            f, args = self.update_queue.get()
-            if f:
-                f(*args)
+            # Execute first action in the queue
+            try:
+                f, args = self.update_queue.get(timeout=0.1)
+                if f:
+                    f(*args)
+            except queue.Empty:
+                pass
 
     def is_queue_empty(self) -> bool:
         return self.update_queue.empty()

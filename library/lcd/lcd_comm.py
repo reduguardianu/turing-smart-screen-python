@@ -100,14 +100,25 @@ class LcdComm(ABC):
         else:
             logger.debug(f"Static COM port: {self.com_port}")
 
-        try:
-            self.lcd_serial = serial.Serial(self.com_port, 115200, timeout=1, rtscts=True)
-        except Exception as e:
-            logger.error(f"Cannot open COM port {self.com_port}: {e}")
+        max_retries = 5
+        retry_delay = 3
+        for attempt in range(max_retries):
             try:
-                sys.exit(0)
-            except:
-                os._exit(0)
+                self.lcd_serial = serial.Serial(self.com_port, 115200, timeout=1, rtscts=True)
+                return
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    logger.warning(
+                        f"Cannot open COM port {self.com_port} (attempt {attempt + 1}/{max_retries}): {e}. "
+                        f"Retrying in {retry_delay}s..."
+                    )
+                    time.sleep(retry_delay)
+                else:
+                    logger.error(f"Cannot open COM port {self.com_port}: {e}")
+                    try:
+                        sys.exit(0)
+                    except Exception:
+                        os._exit(0)
 
     def closeSerial(self):
         if self.lcd_serial is not None:
